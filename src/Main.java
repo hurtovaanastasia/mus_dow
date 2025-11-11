@@ -3,6 +3,7 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.*;
+import java.awt.Desktop;
 
 public class Main {
 
@@ -23,9 +24,8 @@ public class Main {
                     String savePath = musPath + "song" + (count + 1) + ".mp3";
                     System.out.println("Скачивание: " + url + "...");
 
-                    try (ReadableByteChannel channel = Channels.newChannel(new URL(url).openStream());
-                         FileOutputStream fos = new FileOutputStream(savePath)) {
-                        fos.getChannel().transferFrom(channel, 0, Long.MAX_VALUE);
+                    try {
+                        saveFromUrlwNIO(url, savePath);
                         System.out.println(" Успешно сохранено как: " + savePath);
                     } catch (IOException e) {
                         System.out.println(" Ошибка при загрузке: " + url + " — " + e.getMessage());
@@ -35,12 +35,16 @@ public class Main {
                 }
 
                 System.out.println("\nВсего обработано ссылок: " + count);
+
+                playSystemPlayer(musPath);
+
             }
 
         } catch (IOException e) {
             System.out.println("Ошибка при работе с файлами: " + e.getMessage());
         }
     }
+
     private static void saveFromUrlwNIO(String strUrl, String strfile) throws IOException {
         URL url = new URL(strUrl);
         java.net.URLConnection connection = url.openConnection();
@@ -53,5 +57,28 @@ public class Main {
             stream.getChannel().transferFrom(byteChannel, 0, Long.MAX_VALUE);
         }
     }
-}
 
+    private static void playSystemPlayer(String directoryPath) {
+        File dir = new File(directoryPath);
+        File[] mp3Files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".mp3"));
+
+        if (mp3Files == null || mp3Files.length == 0) {
+            System.out.println("Нет MP3 файлов для воспроизведения.");
+            return;
+        }
+
+        System.out.println("\nЗапуск системного плеера для проигрывания треков...");
+
+        try {
+            for (File file : mp3Files) {
+                System.out.println("Играет: " + file.getName());
+                Desktop.getDesktop().open(file);
+                Thread.sleep(2000);
+            }
+        } catch (Exception e) {
+            System.out.println("Ошибка при открытии файлов: " + e.getMessage());
+        }
+
+        System.out.println("Все треки запущены в системном плеере.");
+    }
+}
